@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/benbjohnson/clock"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,7 +21,7 @@ type MiniMemcached struct {
 	items    map[string]*Item
 	CASToken uint64
 	port     uint16
-	clock    clock.Clock
+	clock    Clock
 }
 
 // Config contains minimum attributes to run mini-memcached.
@@ -58,7 +57,7 @@ func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*Item{},
 		CASToken: 0,
-		clock:    clock.New(),
+		clock:    NewClock(),
 	}
 
 	for _, opt := range opts {
@@ -68,7 +67,7 @@ func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 	return &m
 }
 
-func WithClock(clk clock.Clock) MiniMemcachedOption {
+func WithClock(clk Clock) MiniMemcachedOption {
 	return func(m *MiniMemcached) {
 		m.clock = clk
 	}

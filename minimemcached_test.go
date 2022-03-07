@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
@@ -171,7 +170,7 @@ func TestTTLInvalidation(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	clk := clock.NewMock()
+	clk := NewMockClock()
 
 	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
@@ -452,7 +451,7 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 		Expiration: 2,
 	}
 
-	clk := clock.NewMock()
+	clk := NewMockClock()
 
 	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
@@ -1021,7 +1020,7 @@ func TestTouchSuccess(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	clk := clock.NewMock()
+	clk := NewMockClock()
 
 	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
@@ -1237,7 +1236,7 @@ func TestCASFailNotFound(t *testing.T) {
 		Expiration: expTime,
 	}
 
-	clk := clock.NewMock()
+	clk := NewMockClock()
 
 	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
