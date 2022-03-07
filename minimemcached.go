@@ -68,6 +68,7 @@ func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 	return &m
 }
 
+// WithClock applies custom Clock interface. Clock will be used when Item is created
 func WithClock(clk clock.Clock) MiniMemcachedOption {
 	return func(m *MiniMemcached) {
 		m.clock = clk
