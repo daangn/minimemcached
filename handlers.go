@@ -35,7 +35,15 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 	key := cmdLine[1]
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -57,7 +65,15 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 	key := cmdLine[1]
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -83,7 +99,15 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 
 	key := cmdLine[1]
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -209,7 +233,15 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 
 	key := cmdLine[1]
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
+	if err != nil {
+		_, _ = conn.Write(resultErr)
+		return
+	}
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
