@@ -4,7 +4,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // handleGet() handles `get` request.
@@ -53,7 +52,7 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		Flags:      uint32(flags),
 		Value:      value,
 		Expiration: int32(expiration),
-		createdAt:  time.Now().Unix(),
+		createdAt:  m.clock.Now().Unix(),
 	}
 	m.set(key, item, bytes, conn)
 }
@@ -84,7 +83,7 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		Flags:      uint32(flags),
 		Value:      value,
 		Expiration: int32(expiration),
-		createdAt:  time.Now().Unix(),
+		createdAt:  m.clock.Now().Unix(),
 	}
 
 	m.add(key, item, bytes, conn)
@@ -118,7 +117,7 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 		Flags:      uint32(flags),
 		Value:      value,
 		Expiration: int32(expiration),
-		createdAt:  time.Now().Unix(),
+		createdAt:  m.clock.Now().Unix(),
 	}
 
 	m.replace(key, item, bytes, conn)
@@ -258,7 +257,7 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		Flags:      uint32(flags),
 		Value:      value,
 		Expiration: int32(expiration),
-		createdAt:  time.Now().Unix(),
+		createdAt:  m.clock.Now().Unix(),
 	}
 
 	m.cas(key, item, bytes, casToken, conn)
