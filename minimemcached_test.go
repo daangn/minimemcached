@@ -469,7 +469,7 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 		return
 	}
 
-	clk.Add(3)
+	clk.Add(3 * time.Second)
 
 	if err := mc.Replace(item); err != nil && !errors.Is(err, memcache.ErrNotStored) {
 		t.Errorf("err: %v", err)
