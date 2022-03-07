@@ -7,8 +7,8 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,6 +22,7 @@ type MiniMemcached struct {
 	items    map[string]*Item
 	CASToken uint64
 	port     uint16
+	clock    clock.Clock
 }
 
 // Config contains minimum attributes to run mini-memcached.
@@ -50,19 +51,33 @@ type Item struct {
 	createdAt int64
 }
 
+type MiniMemcachedOption func(m *MiniMemcached)
+
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
-func newMiniMemcached() *MiniMemcached {
+func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*Item{},
 		CASToken: 0,
+		clock:    clock.New(),
 	}
+
+	for _, opt := range opts {
+		opt(&m)
+	}
+
 	return &m
+}
+
+func WithClock(clk clock.Clock) MiniMemcachedOption {
+	return func(m *MiniMemcached) {
+		m.clock = clk
+	}
 }
 
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
-func Run(cfg *Config) (*MiniMemcached, error) {
-	m := newMiniMemcached()
+func Run(cfg *Config, opts ...MiniMemcachedOption) (*MiniMemcached, error) {
+	m := newMiniMemcached(opts...)
 	return m, m.start(cfg.Port)
 }
 
@@ -198,7 +213,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 // invalidate() invalidates objects by its expiration value.
 func (m *MiniMemcached) invalidate(key string) {
-	currentTimestamp := time.Now().Unix()
+	currentTimestamp := m.clock.Now().Unix()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	item := m.items[key]

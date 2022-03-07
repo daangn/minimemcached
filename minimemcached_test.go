@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
@@ -170,7 +171,9 @@ func TestTTLInvalidation(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	m, err := Run(cfg)
+	clk := clock.NewMock()
+
+	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -184,7 +187,7 @@ func TestTTLInvalidation(t *testing.T) {
 		return
 	}
 
-	time.Sleep(time.Second * 3)
+	clk.Add(3 * time.Second)
 
 	res, err := mc.Get(key)
 	if err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
@@ -449,7 +452,9 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 		Expiration: 2,
 	}
 
-	m, err := Run(cfg)
+	clk := clock.NewMock()
+
+	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -464,7 +469,7 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 		return
 	}
 
-	time.Sleep(3)
+	clk.Add(3)
 
 	if err := mc.Replace(item); err != nil && !errors.Is(err, memcache.ErrNotStored) {
 		t.Errorf("err: %v", err)
@@ -1013,7 +1018,9 @@ func TestTouchSuccess(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	m, err := Run(cfg)
+	clk := clock.NewMock()
+
+	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -1034,7 +1041,7 @@ func TestTouchSuccess(t *testing.T) {
 		return
 	}
 
-	time.Sleep(time.Second * 3)
+	clk.Add(3 * time.Second)
 
 	res, err := mc.Get(key)
 	if err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
@@ -1227,7 +1234,9 @@ func TestCASFailNotFound(t *testing.T) {
 		Expiration: expTime,
 	}
 
-	m, err := Run(cfg)
+	clk := clock.NewMock()
+
+	m, err := Run(cfg, WithClock(clk))
 	if err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -1248,7 +1257,7 @@ func TestCASFailNotFound(t *testing.T) {
 		return
 	}
 
-	time.Sleep(time.Second * 3)
+	clk.Add(3 * time.Second)
 
 	newValue := "newValue"
 	item.Value = []byte(newValue)
