@@ -474,6 +474,9 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 	if err := mc.Replace(item); err != nil && !errors.Is(err, memcache.ErrNotStored) {
 		t.Errorf("err: %v", err)
 		return
+	} else if err == nil {
+		t.Errorf("item must be invalidated")
+		return
 	}
 }
 
@@ -1264,6 +1267,9 @@ func TestCASFailNotFound(t *testing.T) {
 
 	if err := mc.CompareAndSwap(item); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("err: %v", err)
+		return
+	} else if err == nil {
+		t.Errorf("item must be invalidated")
 		return
 	}
 }
