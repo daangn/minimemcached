@@ -657,8 +657,8 @@ func TestPrependFail(t *testing.T) {
 
 	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
-	if err := writeAppend(m.Port(), key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
-		t.Errorf("failed to append. err: %v", err)
+	if err := writePrepend(m.Port(), key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
+		t.Errorf("failed to prepend. err: %v", err)
 		return
 	}
 
