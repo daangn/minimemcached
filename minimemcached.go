@@ -51,10 +51,10 @@ type Item struct {
 	createdAt int64
 }
 
-type MiniMemcachedOption func(m *MiniMemcached)
+type Option func(m *MiniMemcached)
 
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
-func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
+func newMiniMemcached(opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*Item{},
 		CASToken: 0,
@@ -69,7 +69,7 @@ func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 }
 
 // WithClock applies custom Clock interface. Clock will be used when Item is created
-func WithClock(clk clock.Clock) MiniMemcachedOption {
+func WithClock(clk clock.Clock) Option {
 	return func(m *MiniMemcached) {
 		m.clock = clk
 	}
@@ -77,7 +77,7 @@ func WithClock(clk clock.Clock) MiniMemcachedOption {
 
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
-func Run(cfg *Config, opts ...MiniMemcachedOption) (*MiniMemcached, error) {
+func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
 	m := newMiniMemcached(opts...)
 	return m, m.start(cfg.Port)
 }
