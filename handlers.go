@@ -13,6 +13,7 @@ func handleGet(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 		return
 	}
 	key := cmdLine[2]
+
 	m.gets([]string{key}, conn)
 }
 
@@ -23,6 +24,7 @@ func handleGets(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 		return
 	}
 	cmdLine[len(cmdLine)-1] = strings.TrimSuffix(cmdLine[len(cmdLine)-1], string(crlf))
+
 	m.gets(cmdLine[1:], conn)
 }
 
@@ -33,27 +35,32 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		return
 	}
 	key := cmdLine[1]
+
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	item := &Item{
 		Flags:      uint32(flags),
 		Value:      value,
 		Expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
+
 	m.set(key, item, bytes, conn)
 }
 
@@ -63,16 +70,19 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		return
 	}
 	key := cmdLine[1]
+
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -95,18 +105,20 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 		_, _ = conn.Write(resultErr)
 		return
 	}
-
 	key := cmdLine[1]
+
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -148,6 +160,7 @@ func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 	}
 
 	key := cmdLine[1]
+
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
@@ -214,6 +227,7 @@ func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 
 	key := cmdLine[1]
 	expTime := cmdLine[2]
+
 	expiration, err := strconv.ParseInt(expTime, 10, 32)
 	if err != nil {
 		_, _ = conn.Write(resultClientErrInvalidExpTimeArg)
@@ -231,16 +245,19 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 
 	key := cmdLine[1]
+
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
 		return
 	}
+
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
