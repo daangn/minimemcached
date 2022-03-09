@@ -4,6 +4,7 @@ import (
 	"bufio"
 	gobytes "bytes"
 	"errors"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -133,6 +134,10 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 	for {
 		reader := bufio.NewReader(conn)
 		req, err := reader.ReadString('\n')
+		if errors.Is(err, io.EOF) {
+			continue
+		}
+
 		if err != nil {
 			log.Err(err).Msgf("err reading string: %v", err)
 			return
