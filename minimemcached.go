@@ -4,6 +4,7 @@ import (
 	"bufio"
 	gobytes "bytes"
 	"errors"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	Version = "1.0.0"
+	Version = "1.0.1"
 )
 
 type MiniMemcached struct {
@@ -51,10 +52,10 @@ type Item struct {
 	createdAt int64
 }
 
-type MiniMemcachedOption func(m *MiniMemcached)
+type Option func(m *MiniMemcached)
 
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
-func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
+func newMiniMemcached(opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*Item{},
 		CASToken: 0,
@@ -69,7 +70,7 @@ func newMiniMemcached(opts ...MiniMemcachedOption) *MiniMemcached {
 }
 
 // WithClock applies custom Clock interface. Clock will be used when Item is created
-func WithClock(clk clock.Clock) MiniMemcachedOption {
+func WithClock(clk clock.Clock) Option {
 	return func(m *MiniMemcached) {
 		m.clock = clk
 	}
@@ -77,18 +78,18 @@ func WithClock(clk clock.Clock) MiniMemcachedOption {
 
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
-func Run(cfg *Config, opts ...MiniMemcachedOption) (*MiniMemcached, error) {
+func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
 	m := newMiniMemcached(opts...)
 	return m, m.start(cfg.Port)
 }
 
 // Close closes mini-memcached server and clears all objects stored.
 func (m *MiniMemcached) Close() {
-	log.Info().Msg("closed mini-memcached.")
 	m.mu.Lock()
 	m.items = nil
 	m.server.close()
 	m.mu.Unlock()
+	log.Info().Msg("closed mini-memcached.")
 }
 
 func (m *MiniMemcached) Port() uint16 {
@@ -133,11 +134,14 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 	for {
 		reader := bufio.NewReader(conn)
 		req, err := reader.ReadString('\n')
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
 		if err != nil {
 			log.Err(err).Msgf("err reading string: %v", err)
 			return
 		}
-
 		req = strings.TrimSuffix(req, "\r\n")
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
