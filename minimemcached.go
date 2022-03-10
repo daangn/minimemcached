@@ -85,11 +85,11 @@ func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
 
 // Close closes mini-memcached server and clears all objects stored.
 func (m *MiniMemcached) Close() {
-	log.Info().Msg("closed mini-memcached.")
 	m.mu.Lock()
 	m.items = nil
 	m.server.close()
 	m.mu.Unlock()
+	log.Info().Msg("closed mini-memcached.")
 }
 
 func (m *MiniMemcached) Port() uint16 {
@@ -135,14 +135,13 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		reader := bufio.NewReader(conn)
 		req, err := reader.ReadString('\n')
 		if errors.Is(err, io.EOF) {
-			continue
+			break
 		}
 
 		if err != nil {
 			log.Err(err).Msgf("err reading string: %v", err)
 			return
 		}
-
 		req = strings.TrimSuffix(req, "\r\n")
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
