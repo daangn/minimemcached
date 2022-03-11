@@ -84,6 +84,19 @@ func main() {
 ## Benchmarks
 
 - Running same test cases on memcached server on a docker and minimemcached, minimemcached outperformed memcached running on docker container.
+- You can run this benchmark yourself. Check [here](https://github.com/daangn/minimemcached/tree/main/benchmarks).
+
+<details><summary>Benchmark Environment</summary>
+<p>
+
+* goos: darwin
+* goarch: arm64
+* memcached docker image: `memcached:1.5.16`
+
+</p>
+</details>
+
+### Results
 
 ```
 # Memcached running on a docker container.
@@ -101,7 +114,7 @@ BenchmarkMinimemcached-8    25046	     46770 ns/op
 BenchmarkMinimemcached-8    26085	     46707 ns/op
 ```
 
-> op: set, get, delete operation
+> `op`: set, get, delete operation
 
 - As shown in the result above, minimemcached took about 47122.8 ns per operation, when memcached took about 1744273.2 ns per operation.
 
