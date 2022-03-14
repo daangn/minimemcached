@@ -1,0 +1,6 @@
+version: "0"
+services:
+  memcached:
+    image: memcached:1.5.16
+    ports:
+      - "54008:11211"
