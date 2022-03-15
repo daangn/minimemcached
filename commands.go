@@ -32,7 +32,7 @@ func (m *MiniMemcached) gets(keys []string, conn net.Conn) {
 }
 
 // set() handles memcached `set` command.
-func (m *MiniMemcached) set(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) set(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
@@ -53,7 +53,7 @@ func (m *MiniMemcached) set(key string, item *Item, bytes int, conn net.Conn) {
 }
 
 // add() handles memcached `add` command.
-func (m *MiniMemcached) add(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) add(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
@@ -79,7 +79,7 @@ func (m *MiniMemcached) add(key string, item *Item, bytes int, conn net.Conn) {
 }
 
 // replace() handles memcached `replace` command.
-func (m *MiniMemcached) replace(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) replace(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
@@ -284,12 +284,12 @@ func (m *MiniMemcached) flushAll(conn net.Conn) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.CASToken += 1
-	m.items = map[string]*Item{}
+	m.items = map[string]*item{}
 	_, _ = conn.Write(resultOK)
 }
 
 // cas() handles memcached `cas` command.
-func (m *MiniMemcached) cas(key string, item *Item, bytes int, casToken uint64, conn net.Conn) {
+func (m *MiniMemcached) cas(key string, item *item, bytes int, casToken uint64, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return

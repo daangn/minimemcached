@@ -20,7 +20,7 @@ const (
 type MiniMemcached struct {
 	*server
 	mu       sync.RWMutex
-	items    map[string]*Item
+	items    map[string]*item
 	CASToken uint64
 	port     uint16
 	clock    clock.Clock
@@ -34,8 +34,8 @@ type Config struct {
 	Port uint16
 }
 
-// Item is an object stored in mini-memcached.
-type Item struct {
+// item is an object stored in mini-memcached.
+type item struct {
 	// Value is the actual data stored in the item.
 	Value []byte
 	// Flags is a 32-bit unsigned integer that mini-memcached stores with the data
@@ -57,7 +57,7 @@ type Option func(m *MiniMemcached)
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
 func newMiniMemcached(opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
-		items:    map[string]*Item{},
+		items:    map[string]*item{},
 		CASToken: 0,
 		clock:    clock.New(),
 	}
@@ -69,7 +69,7 @@ func newMiniMemcached(opts ...Option) *MiniMemcached {
 	return &m
 }
 
-// WithClock applies custom Clock interface. Clock will be used when Item is created
+// WithClock applies custom Clock interface. Clock will be used when item is created.
 func WithClock(clk clock.Clock) Option {
 	return func(m *MiniMemcached) {
 		m.clock = clk
