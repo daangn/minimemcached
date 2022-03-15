@@ -486,7 +486,7 @@ func writeAppend(port uint16, key string, value []byte) error {
 		return err
 	}
 
-	message := fmt.Sprintf("%s %s %d %d %d", APPEND, key, 0, 0, len(value))
+	message := fmt.Sprintf("%s %s %d %d %d", appendCmd, key, 0, 0, len(value))
 
 	if _, err := conn.Write(append([]byte(message), crlf...)); err != nil {
 		return err
@@ -513,7 +513,7 @@ func writePrepend(port uint16, key string, value []byte) error {
 		return err
 	}
 
-	message := fmt.Sprintf("%s %s %d %d %d", PREPEND, key, 0, 0, len(value))
+	message := fmt.Sprintf("%s %s %d %d %d", prependCmd, key, 0, 0, len(value))
 
 	if _, err := conn.Write(append([]byte(message), crlf...)); err != nil {
 		return err

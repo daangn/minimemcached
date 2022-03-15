@@ -64,6 +64,7 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	m.set(key, item, bytes, conn)
 }
 
+// handleAdd() handles `add` request.
 func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
@@ -152,7 +153,7 @@ func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Con
 	m.append(key, bytes, value, conn)
 }
 
-// handlePrepend() handles `append` requests.
+// handlePrepend() handles `prepend` requests.
 func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)

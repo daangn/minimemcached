@@ -146,11 +146,11 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
 		switch cmd {
-		case GET:
+		case getCmd:
 			handleGet(m, cmdLine, conn)
-		case GETS:
+		case getsCmd:
 			handleGets(m, cmdLine, conn)
-		case SET:
+		case setCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -158,7 +158,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleSet(m, cmdLine, value, conn)
-		case ADD:
+		case addCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -166,7 +166,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleAdd(m, cmdLine, value, conn)
-		case REPLACE:
+		case replaceCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -174,7 +174,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleReplace(m, cmdLine, value, conn)
-		case APPEND:
+		case appendCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -182,7 +182,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleAppend(m, cmdLine, value, conn)
-		case PREPEND:
+		case prependCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -190,17 +190,17 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handlePrepend(m, cmdLine, value, conn)
-		case DELETE:
+		case deleteCmd:
 			handleDelete(m, cmdLine, conn)
-		case INCR:
+		case incrCmd:
 			handleIncr(m, cmdLine, conn)
-		case DECR:
+		case decrCmd:
 			handleDecr(m, cmdLine, conn)
-		case TOUCH:
+		case touchCmd:
 			handleTouch(m, cmdLine, conn)
-		case FLUSH_ALL:
+		case flushAllCmd:
 			handleFlushAll(m, conn)
-		case CAS:
+		case casCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -208,7 +208,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleCas(m, cmdLine, value, conn)
-		case VERSION:
+		case versionCmd:
 			handleVersion(m, conn)
 		default:
 			handleErr(conn)
