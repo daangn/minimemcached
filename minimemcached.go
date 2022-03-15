@@ -18,7 +18,7 @@ const (
 )
 
 type MiniMemcached struct {
-	server   *Server
+	*server
 	mu       sync.RWMutex
 	items    map[string]*Item
 	CASToken uint64
@@ -87,7 +87,7 @@ func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
 func (m *MiniMemcached) Close() {
 	m.mu.Lock()
 	m.items = nil
-	m.server.close()
+	m.close()
 	m.mu.Unlock()
 	log.Info().Msg("closed mini-memcached.")
 }
@@ -122,7 +122,7 @@ func (m *MiniMemcached) newServer() {
 
 func (m *MiniMemcached) serve() {
 	for {
-		conn, err := m.server.l.Accept()
+		conn, err := m.l.Accept()
 		if err != nil {
 			return
 		}
