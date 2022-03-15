@@ -55,9 +55,9 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 
 	item := &item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
@@ -91,9 +91,9 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 
 	item := &item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
@@ -127,9 +127,9 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 	}
 
 	item := &item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
@@ -272,9 +272,9 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	}
 
 	item := &item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 

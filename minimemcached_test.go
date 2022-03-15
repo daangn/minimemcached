@@ -242,8 +242,8 @@ func TestCASToken(t *testing.T) {
 		t.Error("i1 nil")
 		return
 	}
-	if i1.CASToken != 1 {
-		t.Errorf("i1.CASToken wrong. want: 1, got: %d", i1.CASToken)
+	if i1.casToken != 1 {
+		t.Errorf("i1.casToken wrong. want: 1, got: %d", i1.casToken)
 		return
 	}
 
@@ -252,8 +252,8 @@ func TestCASToken(t *testing.T) {
 		t.Error("i2 nil")
 		return
 	}
-	if i2.CASToken != 2 {
-		t.Errorf("i2.CASToken wrong. want: 2, got: %d", i2.CASToken)
+	if i2.casToken != 2 {
+		t.Errorf("i2.casToken wrong. want: 2, got: %d", i2.casToken)
 		return
 	}
 
@@ -267,8 +267,8 @@ func TestCASToken(t *testing.T) {
 		t.Error("i1 nil")
 		return
 	}
-	if i1.CASToken != 3 {
-		t.Errorf("i1.CASToken wrong. want: 3, got: %d", i1.CASToken)
+	if i1.casToken != 3 {
+		t.Errorf("i1.casToken wrong. want: 3, got: %d", i1.casToken)
 		return
 	}
 
@@ -282,8 +282,8 @@ func TestCASToken(t *testing.T) {
 		t.Error("i3 nil")
 		return
 	}
-	if i3.CASToken != 4 {
-		t.Errorf("i3.CASToken wrong. want: 4, got: %d", i3.CASToken)
+	if i3.casToken != 4 {
+		t.Errorf("i3.casToken wrong. want: 4, got: %d", i3.casToken)
 		return
 	}
 
@@ -292,8 +292,8 @@ func TestCASToken(t *testing.T) {
 		t.Error("i2 nil")
 		return
 	}
-	if i2.CASToken != 2 {
-		t.Errorf("i2.CASToken wrong. want: 2, got: %d", i2.CASToken)
+	if i2.casToken != 2 {
+		t.Errorf("i2.casToken wrong. want: 2, got: %d", i2.casToken)
 		return
 	}
 }

@@ -36,19 +36,19 @@ type Config struct {
 
 // item is an object stored in mini-memcached.
 type item struct {
-	// Value is the actual data stored in the item.
-	Value []byte
-	// Flags is a 32-bit unsigned integer that mini-memcached stores with the data
+	// value is the actual data stored in the item.
+	value []byte
+	// flags is a 32-bit unsigned integer that mini-memcached stores with the data
 	// provided by the user.
-	Flags uint32
-	// Expiration is the expiration time in seconds.
-	// 0 means no delay. IF Expiration is more than 30 days, mini-memcached
+	flags uint32
+	// expiration is the expiration time in seconds.
+	// 0 means no delay. IF expiration is more than 30 days, mini-memcached
 	// uses it as a UNIX timestamp for expiration.
-	Expiration int32
-	// CASToken is a unique unsigned 64-bit value of an existing item.
-	CASToken uint64
+	expiration int32
+	// casToken is a unique unsigned 64-bit value of an existing item.
+	casToken uint64
 	// createdAt is UNIX timestamp of the time when item has been created.
-	// It is used for invalidations along with Expiration.
+	// It is used for invalidations along with expiration.
 	createdAt int64
 }
 
@@ -225,17 +225,17 @@ func (m *MiniMemcached) invalidate(key string) {
 	if item == nil {
 		return
 	}
-	if item.Expiration == 0 {
+	if item.expiration == 0 {
 		return
 	}
-	if item.Expiration > ttlUnixTimestamp {
-		if currentTimestamp > int64(item.Expiration) {
+	if item.expiration > ttlUnixTimestamp {
+		if currentTimestamp > int64(item.expiration) {
 			delete(m.items, key)
 			return
 		}
 		return
 	}
-	if currentTimestamp-item.createdAt >= int64(item.Expiration) {
+	if currentTimestamp-item.createdAt >= int64(item.expiration) {
 		delete(m.items, key)
 		return
 	}
