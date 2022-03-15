@@ -1,4 +1,8 @@
-# minimemcached
+# Minimemcached
+
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/daangn/minimemcached.svg)](https://pkg.go.dev/github.com/daangn/minimemcached)
+[![Test](https://github.com/daangn/minimemcached/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/daangn/minimemcached/actions/workflows/test.yml)
 
 Minimemcached is a Memcached server for written in Go, aimed for unittests in Go projects.
 
@@ -79,8 +83,6 @@ func main() {
 
 ```
 
----
-
 ## Benchmarks
 
 - Running same test cases on memcached server on a docker and minimemcached, minimemcached outperformed memcached running on docker container.
@@ -118,7 +120,14 @@ BenchmarkMinimemcached-8    26085	     46707 ns/op
 
 - As shown in the result above, minimemcached took about 47122.8 ns per operation, when memcached took about 1744273.2 ns per operation.
 
----
+
+## Author
+
+- [@sang-w0o](https://github.com/sang-w0o)
+- [@mingrammer](https://github.com/mingrammer)
+- [@HurSungYun](https://github.com/HurSungYun)
+- [@MeteorSis](https://github.com/MeteorSis)
+- [@novemberde](https://github.com/novemberde)
 
 ## Contributions
 
