@@ -127,6 +127,7 @@ BenchmarkMinimemcached-8    26085	     46707 ns/op
 - [@mingrammer](https://github.com/mingrammer)
 - [@HurSungYun](https://github.com/HurSungYun)
 - [@MeteorSis](https://github.com/MeteorSis)
+- [@JungleKim](https://github.com/JungleKim)
 - [@novemberde](https://github.com/novemberde)
 
 ## Contributions
