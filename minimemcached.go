@@ -21,7 +21,7 @@ type MiniMemcached struct {
 	*server
 	mu       sync.RWMutex
 	items    map[string]*item
-	CASToken uint64
+	casToken uint64
 	port     uint16
 	clock    clock.Clock
 }
@@ -58,7 +58,7 @@ type Option func(m *MiniMemcached)
 func newMiniMemcached(opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*item{},
-		CASToken: 0,
+		casToken: 0,
 		clock:    clock.New(),
 	}
 
