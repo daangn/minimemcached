@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	Version = "1.0.1"
+	Version = "1.1.0"
 )
 
 type MiniMemcached struct {
-	server   *Server
+	*server
 	mu       sync.RWMutex
-	items    map[string]*Item
-	CASToken uint64
+	items    map[string]*item
+	casToken uint64
 	port     uint16
 	clock    clock.Clock
 }
@@ -34,21 +34,21 @@ type Config struct {
 	Port uint16
 }
 
-// Item is an object stored in mini-memcached.
-type Item struct {
-	// Value is the actual data stored in the item.
-	Value []byte
-	// Flags is a 32-bit unsigned integer that mini-memcached stores with the data
+// item is an object stored in mini-memcached.
+type item struct {
+	// value is the actual data stored in the item.
+	value []byte
+	// flags is a 32-bit unsigned integer that mini-memcached stores with the data
 	// provided by the user.
-	Flags uint32
-	// Expiration is the expiration time in seconds.
-	// 0 means no delay. IF Expiration is more than 30 days, mini-memcached
+	flags uint32
+	// expiration is the expiration time in seconds.
+	// 0 means no delay. IF expiration is more than 30 days, mini-memcached
 	// uses it as a UNIX timestamp for expiration.
-	Expiration int32
-	// CASToken is a unique unsigned 64-bit value of an existing item.
-	CASToken uint64
+	expiration int32
+	// casToken is a unique unsigned 64-bit value of an existing item.
+	casToken uint64
 	// createdAt is UNIX timestamp of the time when item has been created.
-	// It is used for invalidations along with Expiration.
+	// It is used for invalidations along with expiration.
 	createdAt int64
 }
 
@@ -57,8 +57,8 @@ type Option func(m *MiniMemcached)
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
 func newMiniMemcached(opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
-		items:    map[string]*Item{},
-		CASToken: 0,
+		items:    map[string]*item{},
+		casToken: 0,
 		clock:    clock.New(),
 	}
 
@@ -69,7 +69,7 @@ func newMiniMemcached(opts ...Option) *MiniMemcached {
 	return &m
 }
 
-// WithClock applies custom Clock interface. Clock will be used when Item is created
+// WithClock applies custom Clock interface. Clock will be used when item is created.
 func WithClock(clk clock.Clock) Option {
 	return func(m *MiniMemcached) {
 		m.clock = clk
@@ -87,7 +87,7 @@ func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
 func (m *MiniMemcached) Close() {
 	m.mu.Lock()
 	m.items = nil
-	m.server.close()
+	m.close()
 	m.mu.Unlock()
 	log.Info().Msg("closed mini-memcached.")
 }
@@ -122,7 +122,7 @@ func (m *MiniMemcached) newServer() {
 
 func (m *MiniMemcached) serve() {
 	for {
-		conn, err := m.server.l.Accept()
+		conn, err := m.l.Accept()
 		if err != nil {
 			return
 		}
@@ -146,11 +146,11 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
 		switch cmd {
-		case GET:
+		case getCmd:
 			handleGet(m, cmdLine, conn)
-		case GETS:
+		case getsCmd:
 			handleGets(m, cmdLine, conn)
-		case SET:
+		case setCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -158,7 +158,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleSet(m, cmdLine, value, conn)
-		case ADD:
+		case addCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -166,7 +166,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleAdd(m, cmdLine, value, conn)
-		case REPLACE:
+		case replaceCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -174,7 +174,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleReplace(m, cmdLine, value, conn)
-		case APPEND:
+		case appendCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -182,7 +182,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleAppend(m, cmdLine, value, conn)
-		case PREPEND:
+		case prependCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -190,17 +190,17 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handlePrepend(m, cmdLine, value, conn)
-		case DELETE:
+		case deleteCmd:
 			handleDelete(m, cmdLine, conn)
-		case INCR:
+		case incrCmd:
 			handleIncr(m, cmdLine, conn)
-		case DECR:
+		case decrCmd:
 			handleDecr(m, cmdLine, conn)
-		case TOUCH:
+		case touchCmd:
 			handleTouch(m, cmdLine, conn)
-		case FLUSH_ALL:
+		case flushAllCmd:
 			handleFlushAll(m, conn)
-		case CAS:
+		case casCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
 				handleErr(conn)
@@ -208,7 +208,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 
 			value = gobytes.TrimSuffix(value, crlf)
 			handleCas(m, cmdLine, value, conn)
-		case VERSION:
+		case versionCmd:
 			handleVersion(m, conn)
 		default:
 			handleErr(conn)
@@ -225,17 +225,17 @@ func (m *MiniMemcached) invalidate(key string) {
 	if item == nil {
 		return
 	}
-	if item.Expiration == 0 {
+	if item.expiration == 0 {
 		return
 	}
-	if item.Expiration > ttlUnixTimestamp {
-		if currentTimestamp > int64(item.Expiration) {
+	if item.expiration > ttlUnixTimestamp {
+		if currentTimestamp > int64(item.expiration) {
 			delete(m.items, key)
 			return
 		}
 		return
 	}
-	if currentTimestamp-item.createdAt >= int64(item.Expiration) {
+	if currentTimestamp-item.createdAt >= int64(item.expiration) {
 		delete(m.items, key)
 		return
 	}

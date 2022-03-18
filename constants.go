@@ -3,20 +3,20 @@ package minimemcached
 import "fmt"
 
 const (
-	GET       = "get"
-	GETS      = "gets"
-	CAS       = "cas"
-	SET       = "set"
-	TOUCH     = "touch"
-	ADD       = "add"
-	REPLACE   = "replace"
-	APPEND    = "append"
-	PREPEND   = "prepend"
-	DELETE    = "delete"
-	INCR      = "incr"
-	DECR      = "decr"
-	FLUSH_ALL = "flush_all"
-	VERSION   = "version"
+	getCmd      = "get"
+	getsCmd     = "gets"
+	casCmd      = "cas"
+	setCmd      = "set"
+	touchCmd    = "touch"
+	addCmd      = "add"
+	replaceCmd  = "replace"
+	appendCmd   = "append"
+	prependCmd  = "prepend"
+	deleteCmd   = "delete"
+	incrCmd     = "incr"
+	decrCmd     = "decr"
+	flushAllCmd = "flush_all"
+	versionCmd  = "version"
 )
 
 var (
@@ -35,7 +35,6 @@ var (
 	resultClientErrInvalidExpTimeArg       = []byte("CLIENT_ERROR invalid exptime argument\r\n")
 	resultEnd                              = []byte("END\r\n")
 	resultErr                              = []byte("ERROR\r\n")
-	resultNotImplementedCmdErr             = []byte("SERVER_ERROR command yet not implemented in mini-memcached.\r\n")
 	resultVersion                          = []byte(fmt.Sprintf("VERSION mini-memcached %s\r\n", Version))
 	value                                  = "VALUE"
 )

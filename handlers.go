@@ -54,16 +54,17 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		return
 	}
 
-	item := &Item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+	item := &item{
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
 	m.set(key, item, bytes, conn)
 }
 
+// handleAdd() handles `add` request.
 func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
@@ -89,10 +90,10 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		return
 	}
 
-	item := &Item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+	item := &item{
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
@@ -125,10 +126,10 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 		return
 	}
 
-	item := &Item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+	item := &item{
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 
@@ -152,7 +153,7 @@ func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Con
 	m.append(key, bytes, value, conn)
 }
 
-// handlePrepend() handles `append` requests.
+// handlePrepend() handles `prepend` requests.
 func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
@@ -270,10 +271,10 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 		return
 	}
 
-	item := &Item{
-		Flags:      uint32(flags),
-		Value:      value,
-		Expiration: int32(expiration),
+	item := &item{
+		flags:      uint32(flags),
+		value:      value,
+		expiration: int32(expiration),
 		createdAt:  m.clock.Now().Unix(),
 	}
 

@@ -22,8 +22,8 @@ func (m *MiniMemcached) gets(keys []string, conn net.Conn) {
 		item := m.items[k]
 		m.mu.RUnlock()
 		if item != nil {
-			result = append(result, []byte(fmt.Sprintf("%s %s %d %d %d\r\n", value, k, item.Flags, len(item.Value), item.CASToken))...)
-			result = append(result, item.Value...)
+			result = append(result, []byte(fmt.Sprintf("%s %s %d %d %d\r\n", value, k, item.flags, len(item.value), item.casToken))...)
+			result = append(result, item.value...)
 			result = append(result, crlf...)
 		}
 	}
@@ -32,12 +32,12 @@ func (m *MiniMemcached) gets(keys []string, conn net.Conn) {
 }
 
 // set() handles memcached `set` command.
-func (m *MiniMemcached) set(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) set(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
 	}
-	if !isLegalValue(bytes, item.Value) {
+	if !isLegalValue(bytes, item.value) {
 		_, _ = conn.Write(resultClientErrBadDataChunk)
 		return
 	}
@@ -45,20 +45,20 @@ func (m *MiniMemcached) set(key string, item *Item, bytes int, conn net.Conn) {
 	m.invalidate(key)
 
 	m.mu.Lock()
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 	m.items[key] = item
 	m.mu.Unlock()
 	_, _ = conn.Write(resultStored)
 }
 
 // add() handles memcached `add` command.
-func (m *MiniMemcached) add(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) add(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
 	}
-	if !isLegalValue(bytes, item.Value) {
+	if !isLegalValue(bytes, item.value) {
 		_, _ = conn.Write(resultClientErrBadDataChunk)
 		return
 	}
@@ -72,19 +72,19 @@ func (m *MiniMemcached) add(key string, item *Item, bytes int, conn net.Conn) {
 		return
 	}
 
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
 
 // replace() handles memcached `replace` command.
-func (m *MiniMemcached) replace(key string, item *Item, bytes int, conn net.Conn) {
+func (m *MiniMemcached) replace(key string, item *item, bytes int, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
 	}
-	if !isLegalValue(bytes, item.Value) {
+	if !isLegalValue(bytes, item.value) {
 		_, _ = conn.Write(resultClientErrBadDataChunk)
 		return
 	}
@@ -97,8 +97,8 @@ func (m *MiniMemcached) replace(key string, item *Item, bytes int, conn net.Conn
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
@@ -123,9 +123,9 @@ func (m *MiniMemcached) append(key string, bytes int, value []byte, conn net.Con
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.CASToken += 1
-	prevItem.CASToken = m.CASToken
-	prevItem.Value = append(prevItem.Value, value...)
+	m.casToken += 1
+	prevItem.casToken = m.casToken
+	prevItem.value = append(prevItem.value, value...)
 	_, _ = conn.Write(resultStored)
 }
 
@@ -149,9 +149,9 @@ func (m *MiniMemcached) prepend(key string, bytes int, value []byte, conn net.Co
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.CASToken += 1
-	prevItem.CASToken = m.CASToken
-	prevItem.Value = append(value, prevItem.Value...)
+	m.casToken += 1
+	prevItem.casToken = m.casToken
+	prevItem.value = append(value, prevItem.value...)
 	_, _ = conn.Write(resultStored)
 }
 
@@ -191,14 +191,14 @@ func (m *MiniMemcached) incr(key string, incrValue uint64, conn net.Conn) {
 		return
 	}
 
-	numericItemValue, isNumeric := getNumericValueFromByteArray(item.Value)
+	numericItemValue, isNumeric := getNumericValueFromByteArray(item.value)
 	if !isNumeric {
 		_, _ = conn.Write(resultClientErrIncrDecrNonNumericValue)
 		return
 	}
 
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 
 	var (
 		numericItemValueInt big.Int
@@ -219,7 +219,7 @@ func (m *MiniMemcached) incr(key string, incrValue uint64, conn net.Conn) {
 	}
 
 	value := []byte(strconv.FormatUint(incrementedValue, 10))
-	item.Value = value
+	item.value = value
 	result := append(value, crlf...)
 	_, _ = conn.Write(result)
 }
@@ -240,13 +240,13 @@ func (m *MiniMemcached) decr(key string, decrValue uint64, conn net.Conn) {
 		_, _ = conn.Write(resultNotFound)
 		return
 	}
-	numericItemValue, isNumeric := getNumericValueFromByteArray(item.Value)
+	numericItemValue, isNumeric := getNumericValueFromByteArray(item.value)
 	if !isNumeric {
 		_, _ = conn.Write(resultClientErrIncrDecrNonNumericValue)
 		return
 	}
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 	var decrementedValue uint64
 	if numericItemValue < decrValue {
 		decrementedValue = 0
@@ -254,7 +254,7 @@ func (m *MiniMemcached) decr(key string, decrValue uint64, conn net.Conn) {
 		decrementedValue = numericItemValue - decrValue
 	}
 	value := []byte(strconv.FormatUint(decrementedValue, 10))
-	item.Value = value
+	item.value = value
 	result := append(value, crlf...)
 	_, _ = conn.Write(result)
 }
@@ -275,7 +275,7 @@ func (m *MiniMemcached) touch(key string, expiration int32, conn net.Conn) {
 		_, _ = conn.Write(resultNotFound)
 		return
 	}
-	item.Expiration = expiration
+	item.expiration = expiration
 	_, _ = conn.Write(resultTouched)
 }
 
@@ -283,18 +283,18 @@ func (m *MiniMemcached) touch(key string, expiration int32, conn net.Conn) {
 func (m *MiniMemcached) flushAll(conn net.Conn) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.CASToken += 1
-	m.items = map[string]*Item{}
+	m.casToken += 1
+	m.items = map[string]*item{}
 	_, _ = conn.Write(resultOK)
 }
 
 // cas() handles memcached `cas` command.
-func (m *MiniMemcached) cas(key string, item *Item, bytes int, casToken uint64, conn net.Conn) {
+func (m *MiniMemcached) cas(key string, item *item, bytes int, casToken uint64, conn net.Conn) {
 	if !isLegalKey(key) {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
 		return
 	}
-	if !isLegalValue(bytes, item.Value) {
+	if !isLegalValue(bytes, item.value) {
 		_, _ = conn.Write(resultClientErrBadDataChunk)
 		return
 	}
@@ -308,12 +308,12 @@ func (m *MiniMemcached) cas(key string, item *Item, bytes int, casToken uint64, 
 		_, _ = conn.Write(resultNotFound)
 		return
 	}
-	if prevItem.CASToken != casToken {
+	if prevItem.casToken != casToken {
 		_, _ = conn.Write(resultExists)
 		return
 	}
-	m.CASToken += 1
-	item.CASToken = m.CASToken
+	m.casToken += 1
+	item.casToken = m.casToken
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
