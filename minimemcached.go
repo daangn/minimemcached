@@ -240,3 +240,9 @@ func (m *MiniMemcached) invalidate(key string) {
 		return
 	}
 }
+
+// incrementCASToken() increments the CAS token.
+func (m *MiniMemcached) incrementCASToken() uint64 {
+	m.casToken++
+	return m.casToken
+}
