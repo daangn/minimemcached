@@ -45,8 +45,7 @@ func (m *MiniMemcached) set(key string, item *item, bytes int, conn net.Conn) {
 	m.invalidate(key)
 
 	m.mu.Lock()
-	m.casToken += 1
-	item.casToken = m.casToken
+	item.casToken = m.incrementCASToken()
 	m.items[key] = item
 	m.mu.Unlock()
 	_, _ = conn.Write(resultStored)
@@ -72,8 +71,7 @@ func (m *MiniMemcached) add(key string, item *item, bytes int, conn net.Conn) {
 		return
 	}
 
-	m.casToken += 1
-	item.casToken = m.casToken
+	item.casToken = m.incrementCASToken()
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
@@ -97,8 +95,8 @@ func (m *MiniMemcached) replace(key string, item *item, bytes int, conn net.Conn
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.casToken += 1
-	item.casToken = m.casToken
+
+	item.casToken = m.incrementCASToken()
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
@@ -123,8 +121,8 @@ func (m *MiniMemcached) append(key string, bytes int, value []byte, conn net.Con
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.casToken += 1
-	prevItem.casToken = m.casToken
+
+	prevItem.casToken = m.incrementCASToken()
 	prevItem.value = append(prevItem.value, value...)
 	_, _ = conn.Write(resultStored)
 }
@@ -149,8 +147,8 @@ func (m *MiniMemcached) prepend(key string, bytes int, value []byte, conn net.Co
 		_, _ = conn.Write(resultNotStored)
 		return
 	}
-	m.casToken += 1
-	prevItem.casToken = m.casToken
+
+	prevItem.casToken = m.incrementCASToken()
 	prevItem.value = append(value, prevItem.value...)
 	_, _ = conn.Write(resultStored)
 }
@@ -197,8 +195,7 @@ func (m *MiniMemcached) incr(key string, incrValue uint64, conn net.Conn) {
 		return
 	}
 
-	m.casToken += 1
-	item.casToken = m.casToken
+	item.casToken = m.incrementCASToken()
 
 	var (
 		numericItemValueInt big.Int
@@ -245,8 +242,9 @@ func (m *MiniMemcached) decr(key string, decrValue uint64, conn net.Conn) {
 		_, _ = conn.Write(resultClientErrIncrDecrNonNumericValue)
 		return
 	}
-	m.casToken += 1
-	item.casToken = m.casToken
+
+	item.casToken = m.incrementCASToken()
+
 	var decrementedValue uint64
 	if numericItemValue < decrValue {
 		decrementedValue = 0
@@ -283,7 +281,7 @@ func (m *MiniMemcached) touch(key string, expiration int32, conn net.Conn) {
 func (m *MiniMemcached) flushAll(conn net.Conn) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.casToken += 1
+	_ = m.incrementCASToken()
 	m.items = map[string]*item{}
 	_, _ = conn.Write(resultOK)
 }
@@ -312,8 +310,8 @@ func (m *MiniMemcached) cas(key string, item *item, bytes int, casToken uint64, 
 		_, _ = conn.Write(resultExists)
 		return
 	}
-	m.casToken += 1
-	item.casToken = m.casToken
+
+	item.casToken = m.incrementCASToken()
 	m.items[key] = item
 	_, _ = conn.Write(resultStored)
 }
