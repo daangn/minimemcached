@@ -24,7 +24,7 @@ type MiniMemcached struct {
 	casToken uint64
 	port     uint16
 	clock    clock.Clock
-	logLevel LogLevel
+	logger   Logger
 }
 
 // Config contains minimum attributes to run mini-memcached.
@@ -64,7 +64,7 @@ func newMiniMemcached(lv LogLevel, opts ...Option) *MiniMemcached {
 		items:    map[string]*item{},
 		casToken: 0,
 		clock:    clock.New(),
-		logLevel: lv,
+		logger:   Logger{Level: lv},
 	}
 
 	for _, opt := range opts {
