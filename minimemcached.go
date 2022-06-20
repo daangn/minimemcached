@@ -32,10 +32,8 @@ type MiniMemcached struct {
 type Config struct {
 	// Port is the port number where mini-memcached will start.
 	// When given 0, mini-memcached will start running on a random available port.
-	Port uint16
-	// TODO: LogLevel default value?
-	// Below is not working
-	LogLevel LogLevel `default:"info"`
+	Port     uint16
+	LogLevel LogLevel
 }
 
 // item is an object stored in mini-memcached.
@@ -84,6 +82,9 @@ func WithClock(clk clock.Clock) Option {
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
 func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = Info
+	}
 	m := newMiniMemcached(cfg.LogLevel, opts...)
 	return m, m.start(cfg.Port)
 }
@@ -94,7 +95,9 @@ func (m *MiniMemcached) Close() {
 	m.items = nil
 	m.close()
 	m.mu.Unlock()
-	log.Info().Msg("closed mini-memcached.")
+	if m.logger.Level != Off {
+		m.logger.Println("closed mini-memcached.")
+	}
 }
 
 func (m *MiniMemcached) Port() uint16 {
