@@ -2,6 +2,7 @@ package minimemcached
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -33,6 +34,7 @@ func newLogger(level LogLevel) *Logger {
 
 // Println writes given string to log file.
 func (l *Logger) Println(str string) {
-	s := fmt.Sprintf("{\"level: \"%s\", \"time\":\"%v\", \"message\":\"%s\"}", l.Level, time.Now(), str)
+	str = strings.ReplaceAll(str, "\r\n", "")
+	s := fmt.Sprintf("{\"level:\"%s\",\"time\":\"%v\",\"message\":\"%s\"}", l.Level, time.Now(), str)
 	fmt.Println(s)
 }
