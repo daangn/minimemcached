@@ -24,6 +24,7 @@ type MiniMemcached struct {
 	casToken uint64
 	port     uint16
 	clock    clock.Clock
+	logLevel LogLevel
 }
 
 // Config contains minimum attributes to run mini-memcached.
@@ -32,6 +33,9 @@ type Config struct {
 	// Port is the port number where mini-memcached will start.
 	// When given 0, mini-memcached will start running on a random available port.
 	Port uint16
+	// TODO: LogLevel default value?
+	// Below is not working
+	LogLevel LogLevel `default:"info"`
 }
 
 // item is an object stored in mini-memcached.
@@ -55,11 +59,12 @@ type item struct {
 type Option func(m *MiniMemcached)
 
 // newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
-func newMiniMemcached(opts ...Option) *MiniMemcached {
+func newMiniMemcached(lv LogLevel, opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*item{},
 		casToken: 0,
 		clock:    clock.New(),
+		logLevel: lv,
 	}
 
 	for _, opt := range opts {
@@ -79,7 +84,7 @@ func WithClock(clk clock.Clock) Option {
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
 func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
-	m := newMiniMemcached(opts...)
+	m := newMiniMemcached(cfg.LogLevel, opts...)
 	return m, m.start(cfg.Port)
 }
 
