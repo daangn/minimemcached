@@ -157,7 +157,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
 
-		if m.logger.Level == All || m.logger.Level == Debug {
+		if m.logger.Level == Debug {
 			m.logger.Println(req)
 		}
 		switch cmd {
