@@ -125,6 +125,9 @@ func (m *MiniMemcached) start(port uint16) error {
 func (m *MiniMemcached) newServer() {
 	go func() {
 		m.serve()
+		if m.logger.Level != Off {
+			m.logger.Println("started mini-memcached.")
+		}
 	}()
 }
 
