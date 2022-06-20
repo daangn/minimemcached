@@ -8,9 +8,13 @@ import (
 type LogLevel string
 
 const (
-	Info  LogLevel = "info"
+	// Info is the default LogLevel of Logger.
+	Info LogLevel = "info"
+	// Debug helps you debug mini-memcached usages,
+	//and logs all command and its result after being processed.
 	Debug LogLevel = "debug"
-	Off   LogLevel = "off"
+	// Off does not log anything.
+	Off LogLevel = "off"
 )
 
 // Logger logs certain messages depending on the LogLevel.

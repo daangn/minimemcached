@@ -28,11 +28,11 @@ type MiniMemcached struct {
 }
 
 // Config contains minimum attributes to run mini-memcached.
-// TODO(@sang-w0o): Selectively accept log writer and log level.
 type Config struct {
 	// Port is the port number where mini-memcached will start.
 	// When given 0, mini-memcached will start running on a random available port.
-	Port     uint16
+	Port uint16
+	// LogLevel is the level of logging, which is used by Logger.
 	LogLevel LogLevel
 }
 
