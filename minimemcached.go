@@ -156,6 +156,10 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		req = strings.TrimSuffix(req, "\r\n")
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
+
+		if m.logger.Level == All || m.logger.Level == Debug {
+			m.logger.Println(req)
+		}
 		switch cmd {
 		case getCmd:
 			handleGet(m, cmdLine, conn)
