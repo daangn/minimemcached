@@ -8,7 +8,6 @@ import (
 type LogLevel string
 
 const (
-	All   LogLevel = "all"
 	Info  LogLevel = "info"
 	Debug LogLevel = "debug"
 	Off   LogLevel = "off"
