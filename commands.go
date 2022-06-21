@@ -460,3 +460,11 @@ func (m *MiniMemcached) version(conn net.Conn) {
 		m.logger.Println(fmt.Sprintf("result: %s", string(resultVersion)))
 	}
 }
+
+// handleErr() returns error response to client.
+func (m *MiniMemcached) handleErr(err []byte, conn net.Conn) {
+	_, _ = conn.Write(err)
+	if m.logger.Level == Debug {
+		m.logger.Println(fmt.Sprintf("result: %s", string(err)))
+	}
+}
