@@ -168,7 +168,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case setCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -176,7 +176,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case addCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -184,7 +184,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case replaceCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -192,7 +192,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case appendCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -200,7 +200,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case prependCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -218,7 +218,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case casCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -226,7 +226,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case versionCmd:
 			handleVersion(m, conn)
 		default:
-			handleErr(conn)
+			m.handleErr(resultErr, conn)
 		}
 	}
 }

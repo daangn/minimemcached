@@ -290,8 +290,3 @@ func handleFlushAll(m *MiniMemcached, conn net.Conn) {
 func handleVersion(m *MiniMemcached, conn net.Conn) {
 	m.version(conn)
 }
-
-// handleErr() returns error to client when invalid request is made.
-func handleErr(conn net.Conn) {
-	_, _ = conn.Write(resultErr)
-}
