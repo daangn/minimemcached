@@ -1,6 +1,7 @@
 package minimemcached
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -21,6 +22,9 @@ func handleGet(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleGets(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) == 1 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 	cmdLine[len(cmdLine)-1] = strings.TrimSuffix(cmdLine[len(cmdLine)-1], string(crlf))
@@ -32,6 +36,9 @@ func handleGets(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 	key := cmdLine[1]
@@ -39,18 +46,27 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -68,6 +84,9 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 	key := cmdLine[1]
@@ -75,18 +94,27 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -104,6 +132,9 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 	key := cmdLine[1]
@@ -111,18 +142,27 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -140,6 +180,9 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -147,6 +190,9 @@ func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Con
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -157,6 +203,9 @@ func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Con
 func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -165,6 +214,9 @@ func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -175,6 +227,9 @@ func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 func handleDelete(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 2 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -187,6 +242,9 @@ func handleDelete(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -195,6 +253,9 @@ func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	numericIncrValue, isNumeric := getNumericValueFromString(incrValue)
 	if !isNumeric {
 		_, _ = conn.Write(resultClientErrInvalidNumericDeltaArg)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultClientErrInvalidNumericDeltaArg)))
+		}
 		return
 	}
 
@@ -205,6 +266,9 @@ func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -213,6 +277,9 @@ func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	numericDecrValue, isNumeric := getNumericValueFromString(decrValue)
 	if !isNumeric {
 		_, _ = conn.Write(resultClientErrInvalidNumericDeltaArg)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultClientErrInvalidNumericDeltaArg)))
+		}
 		return
 	}
 
@@ -223,6 +290,9 @@ func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -232,6 +302,9 @@ func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	expiration, err := strconv.ParseInt(expTime, 10, 32)
 	if err != nil {
 		_, _ = conn.Write(resultClientErrInvalidExpTimeArg)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultClientErrInvalidExpTimeArg)))
+		}
 		return
 	}
 
@@ -242,6 +315,9 @@ func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 6 {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
@@ -250,24 +326,36 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
 		_, _ = conn.Write(resultErr)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+		}
 		return
 	}
 
 	casToken, isNumeric := getNumericValueFromString(cmdLine[5])
 	if !isNumeric {
 		_, _ = conn.Write(resultClientErrBadCliFormat)
+		if m.logger.Level == Debug {
+			m.logger.Println(fmt.Sprintf("result: %s", string(resultClientErrBadCliFormat)))
+		}
 		return
 	}
 
@@ -292,6 +380,9 @@ func handleVersion(m *MiniMemcached, conn net.Conn) {
 }
 
 // handleErr() returns error to client when invalid request is made.
-func handleErr(conn net.Conn) {
+func handleErr(m *MiniMemcached, conn net.Conn) {
 	_, _ = conn.Write(resultErr)
+	if m.logger.Level == Debug {
+		m.logger.Println(fmt.Sprintf("result: %s", string(resultErr)))
+	}
 }
