@@ -56,7 +56,7 @@ type item struct {
 
 type Option func(m *MiniMemcached)
 
-// newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
+// newMiniMemcached returns a non-started, MiniMemcached object.
 func newMiniMemcached(lv LogLevel, opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*item{},
