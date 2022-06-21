@@ -24,14 +24,16 @@ type MiniMemcached struct {
 	casToken uint64
 	port     uint16
 	clock    clock.Clock
+	logger   *Logger
 }
 
 // Config contains minimum attributes to run mini-memcached.
-// TODO(@sang-w0o): Selectively accept log writer and log level.
 type Config struct {
 	// Port is the port number where mini-memcached will start.
 	// When given 0, mini-memcached will start running on a random available port.
 	Port uint16
+	// LogLevel is the level of logging, which is used by Logger.
+	LogLevel LogLevel
 }
 
 // item is an object stored in mini-memcached.
@@ -54,12 +56,13 @@ type item struct {
 
 type Option func(m *MiniMemcached)
 
-// newMiniMemcached returns a newMiniMemcached, non-started, MiniMemcached object.
-func newMiniMemcached(opts ...Option) *MiniMemcached {
+// newMiniMemcached returns a non-started, MiniMemcached object.
+func newMiniMemcached(lv LogLevel, opts ...Option) *MiniMemcached {
 	m := MiniMemcached{
 		items:    map[string]*item{},
 		casToken: 0,
 		clock:    clock.New(),
+		logger:   newLogger(lv),
 	}
 
 	for _, opt := range opts {
@@ -79,7 +82,10 @@ func WithClock(clk clock.Clock) Option {
 // Run creates and starts a MiniMemcached server on a random, available port.
 // Close with Close().
 func Run(cfg *Config, opts ...Option) (*MiniMemcached, error) {
-	m := newMiniMemcached(opts...)
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = Info
+	}
+	m := newMiniMemcached(cfg.LogLevel, opts...)
 	return m, m.start(cfg.Port)
 }
 
@@ -89,7 +95,9 @@ func (m *MiniMemcached) Close() {
 	m.items = nil
 	m.close()
 	m.mu.Unlock()
-	log.Info().Msg("closed mini-memcached.")
+	if m.logger.Level != Off {
+		m.logger.Println("closed mini-memcached.")
+	}
 }
 
 func (m *MiniMemcached) Port() uint16 {
@@ -117,6 +125,9 @@ func (m *MiniMemcached) start(port uint16) error {
 func (m *MiniMemcached) newServer() {
 	go func() {
 		m.serve()
+		if m.logger.Level != Off {
+			m.logger.Println("started mini-memcached.")
+		}
 	}()
 }
 
@@ -145,6 +156,10 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		req = strings.TrimSuffix(req, "\r\n")
 		cmdLine := strings.Split(req, " ")
 		cmd := strings.ToLower(cmdLine[0])
+
+		if m.logger.Level == Debug {
+			m.logger.Println(req)
+		}
 		switch cmd {
 		case getCmd:
 			handleGet(m, cmdLine, conn)
@@ -153,7 +168,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case setCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -161,7 +176,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case addCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -169,7 +184,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case replaceCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -177,7 +192,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case appendCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -185,7 +200,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case prependCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -203,7 +218,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case casCmd:
 			value, err := reader.ReadBytes('\n')
 			if err != nil {
-				handleErr(conn)
+				m.handleErr(resultErr, conn)
 			}
 
 			value = gobytes.TrimSuffix(value, crlf)
@@ -211,7 +226,7 @@ func (m *MiniMemcached) serveConn(conn net.Conn) {
 		case versionCmd:
 			handleVersion(m, conn)
 		default:
-			handleErr(conn)
+			m.handleErr(resultErr, conn)
 		}
 	}
 }

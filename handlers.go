@@ -9,7 +9,7 @@ import (
 // handleGet() handles `get` request.
 func handleGet(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) == 1 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 	key := cmdLine[2]
@@ -20,7 +20,7 @@ func handleGet(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleGets() handles `gets` request.
 func handleGets(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) == 1 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 	cmdLine[len(cmdLine)-1] = strings.TrimSuffix(cmdLine[len(cmdLine)-1], string(crlf))
@@ -31,26 +31,26 @@ func handleGets(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleSet() handles `set` request.
 func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 	key := cmdLine[1]
 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -67,26 +67,26 @@ func handleSet(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 // handleAdd() handles `add` request.
 func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 	key := cmdLine[1]
 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -103,26 +103,26 @@ func handleAdd(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 // handleReplace() handles `replace` request.
 func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 	key := cmdLine[1]
 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -139,14 +139,14 @@ func handleReplace(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 // handleAppend() handles `append` requests.
 func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	key := cmdLine[1]
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -156,7 +156,7 @@ func handleAppend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Con
 // handlePrepend() handles `prepend` requests.
 func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 5 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -164,7 +164,7 @@ func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -174,7 +174,7 @@ func handlePrepend(m *MiniMemcached, cmdLine []string, value []byte, conn net.Co
 // handleDelete() handles `delete` requests.
 func handleDelete(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 2 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -186,7 +186,7 @@ func handleDelete(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleIncr() handles `incr` requests.
 func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -194,7 +194,7 @@ func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	incrValue := cmdLine[2]
 	numericIncrValue, isNumeric := getNumericValueFromString(incrValue)
 	if !isNumeric {
-		_, _ = conn.Write(resultClientErrInvalidNumericDeltaArg)
+		m.handleErr(resultClientErrInvalidNumericDeltaArg, conn)
 		return
 	}
 
@@ -204,7 +204,7 @@ func handleIncr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleDecr() handles `decr` requests.
 func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -212,7 +212,7 @@ func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	decrValue := cmdLine[2]
 	numericDecrValue, isNumeric := getNumericValueFromString(decrValue)
 	if !isNumeric {
-		_, _ = conn.Write(resultClientErrInvalidNumericDeltaArg)
+		m.handleErr(resultClientErrInvalidNumericDeltaArg, conn)
 		return
 	}
 
@@ -222,7 +222,7 @@ func handleDecr(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleTouch() handles `touch` requests.
 func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 	if len(cmdLine) != 3 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -231,7 +231,7 @@ func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 
 	expiration, err := strconv.ParseInt(expTime, 10, 32)
 	if err != nil {
-		_, _ = conn.Write(resultClientErrInvalidExpTimeArg)
+		m.handleErr(resultClientErrInvalidExpTimeArg, conn)
 		return
 	}
 
@@ -241,7 +241,7 @@ func handleTouch(m *MiniMemcached, cmdLine []string, conn net.Conn) {
 // handleCas() handles `cas` requests.
 func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) {
 	if len(cmdLine) != 6 {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
@@ -249,25 +249,25 @@ func handleCas(m *MiniMemcached, cmdLine []string, value []byte, conn net.Conn) 
 
 	flags, err := strconv.ParseUint(cmdLine[2], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	expiration, err := strconv.ParseInt(cmdLine[3], 0, 32)
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	bytes, err := strconv.Atoi(cmdLine[4])
 	if err != nil {
-		_, _ = conn.Write(resultErr)
+		m.handleErr(resultErr, conn)
 		return
 	}
 
 	casToken, isNumeric := getNumericValueFromString(cmdLine[5])
 	if !isNumeric {
-		_, _ = conn.Write(resultClientErrBadCliFormat)
+		m.handleErr(resultClientErrBadCliFormat, conn)
 		return
 	}
 
@@ -289,9 +289,4 @@ func handleFlushAll(m *MiniMemcached, conn net.Conn) {
 // handleVersion() handles memcached `version` requests.
 func handleVersion(m *MiniMemcached, conn net.Conn) {
 	m.version(conn)
-}
-
-// handleErr() returns error to client when invalid request is made.
-func handleErr(conn net.Conn) {
-	_, _ = conn.Write(resultErr)
 }
