@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -17,6 +18,34 @@ import (
 
 var cfg = &Config{
 	Port: 0,
+}
+var port uint16
+var clk = clock.NewMock()
+var mc *memcache.Client
+var mm *MiniMemcached
+
+func TestMain(m *testing.M) {
+	var err error
+	mm, err = Run(cfg, WithClock(clk))
+	if err != nil {
+		panic(err)
+	}
+
+	port = mm.Port()
+	mc = memcache.New(fmt.Sprintf(":%d", port))
+	exitVal := m.Run()
+	mm.Close()
+	os.Exit(exitVal)
+}
+
+func removeAllPreviousData(t *testing.T) error {
+	t.Cleanup(func() {
+		if err := mc.DeleteAll(); err != nil {
+			t.Errorf("err: %v", err)
+		}
+		mm.casToken = 0
+	})
+	return nil
 }
 
 func validateGetItemResult(want *memcache.Item, got *memcache.Item) error {
@@ -30,6 +59,11 @@ func validateGetItemResult(want *memcache.Item, got *memcache.Item) error {
 }
 
 func TestGetSet(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	expiration := 60
 	item := &memcache.Item{
@@ -38,15 +72,6 @@ func TestGetSet(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -64,6 +89,11 @@ func TestGetSet(t *testing.T) {
 }
 
 func TestGetMulti(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key1, value1 := "testKey1", "testValue1"
 	key2, value2 := "testKey2", "testValue2"
 	item1 := &memcache.Item{
@@ -75,15 +105,6 @@ func TestGetMulti(t *testing.T) {
 		Value: []byte(value2),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 	if err := mc.Set(item1); err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -119,6 +140,11 @@ func TestGetMulti(t *testing.T) {
 }
 
 func TestGetNoResult(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	wrongKey := "wrongKey"
 	expiration := 60
@@ -128,15 +154,6 @@ func TestGetNoResult(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -163,6 +180,10 @@ func TestGetNoResult(t *testing.T) {
 }
 
 func TestTTLInvalidation(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
 	key, value := "testKey", "testValue"
 	expiration := 2
 	item := &memcache.Item{
@@ -171,17 +192,6 @@ func TestTTLInvalidation(t *testing.T) {
 		Expiration: int32(expiration),
 	}
 
-	clk := clock.NewMock()
-
-	m, err := Run(cfg, WithClock(clk))
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -202,6 +212,11 @@ func TestTTLInvalidation(t *testing.T) {
 }
 
 func TestCASToken(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key1, value1 := "testKey1", "testValue1"
 	key2, value2 := "testKey2", "testValue2"
 	key3, value3 := "testKey3", "testValue3"
@@ -218,15 +233,6 @@ func TestCASToken(t *testing.T) {
 		Value: []byte(value3),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 	if err := mc.Set(item1); err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -237,7 +243,7 @@ func TestCASToken(t *testing.T) {
 		return
 	}
 
-	i1 := m.items[key1]
+	i1 := mm.items[key1]
 	if i1 == nil {
 		t.Error("i1 nil")
 		return
@@ -247,7 +253,7 @@ func TestCASToken(t *testing.T) {
 		return
 	}
 
-	i2 := m.items[key2]
+	i2 := mm.items[key2]
 	if i2 == nil {
 		t.Error("i2 nil")
 		return
@@ -262,7 +268,7 @@ func TestCASToken(t *testing.T) {
 		return
 	}
 
-	i1 = m.items[key1]
+	i1 = mm.items[key1]
 	if i1 == nil {
 		t.Error("i1 nil")
 		return
@@ -272,12 +278,12 @@ func TestCASToken(t *testing.T) {
 		return
 	}
 
-	if err = mc.Set(item3); err != nil {
+	if err := mc.Set(item3); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	i3 := m.items[key3]
+	i3 := mm.items[key3]
 	if i3 == nil {
 		t.Error("i3 nil")
 		return
@@ -287,7 +293,7 @@ func TestCASToken(t *testing.T) {
 		return
 	}
 
-	i2 = m.items[key2]
+	i2 = mm.items[key2]
 	if i2 == nil {
 		t.Error("i2 nil")
 		return
@@ -299,21 +305,16 @@ func TestCASToken(t *testing.T) {
 }
 
 func TestAddSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Add(item); err != nil {
 		t.Errorf("add failed. err: %v", err)
@@ -333,22 +334,17 @@ func TestAddSuccess(t *testing.T) {
 }
 
 func TestAddFail(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	newValue := "newValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -377,22 +373,17 @@ func TestAddFail(t *testing.T) {
 }
 
 func TestReplaceSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	newValue := "newValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -422,21 +413,16 @@ func TestReplaceSuccess(t *testing.T) {
 }
 
 func TestReplaceFail(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Replace(item); err != nil && !errors.Is(err, memcache.ErrNotStored) {
 		t.Errorf("err: %v", err)
@@ -445,24 +431,17 @@ func TestReplaceFail(t *testing.T) {
 }
 
 func TestReplaceFailItemInvalidated(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	item := &memcache.Item{
 		Key:        key,
 		Value:      []byte(value),
 		Expiration: 2,
 	}
-
-	clk := clock.NewMock()
-
-	m, err := Run(cfg, WithClock(clk))
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -480,7 +459,7 @@ func TestReplaceFailItemInvalidated(t *testing.T) {
 	}
 }
 
-func writeAppend(port uint16, key string, value []byte) error {
+func writeAppend(key string, value []byte) error {
 	conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
@@ -507,7 +486,7 @@ func writeAppend(port uint16, key string, value []byte) error {
 	return nil
 }
 
-func writePrepend(port uint16, key string, value []byte) error {
+func writePrepend(key string, value []byte) error {
 	conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
@@ -535,6 +514,11 @@ func writePrepend(port uint16, key string, value []byte) error {
 }
 
 func TestAppendSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	appendValue, resultValue := "Append", "testValueAppend"
 	item := &memcache.Item{
@@ -542,22 +526,12 @@ func TestAppendSuccess(t *testing.T) {
 		Value: []byte(value),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
-
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	if err := writeAppend(m.Port(), key, []byte(appendValue)); err != nil {
+	if err := writeAppend(key, []byte(appendValue)); err != nil {
 		t.Errorf("failed to append. err: %v", err)
 		return
 	}
@@ -575,19 +549,14 @@ func TestAppendSuccess(t *testing.T) {
 }
 
 func TestAppendFail(t *testing.T) {
-	key, value := "testKey", "testValue"
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
+	key, value := "testKey", "testValue"
 
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
-
-	if err := writeAppend(m.Port(), key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
+	if err := writeAppend(key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("failed to append. err: %v", err)
 		return
 	}
@@ -605,6 +574,11 @@ func TestAppendFail(t *testing.T) {
 }
 
 func TestPrependSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "TestValue"
 	prependValue, resultValue := "Prepend", "PrependTestValue"
 	item := &memcache.Item{
@@ -612,22 +586,12 @@ func TestPrependSuccess(t *testing.T) {
 		Value: []byte(value),
 	}
 
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
-
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	if err := writePrepend(m.Port(), key, []byte(prependValue)); err != nil {
+	if err := writePrepend(key, []byte(prependValue)); err != nil {
 		t.Errorf("failed to prepend. err: %v", err)
 		return
 	}
@@ -645,19 +609,14 @@ func TestPrependSuccess(t *testing.T) {
 }
 
 func TestPrependFail(t *testing.T) {
-	key, value := "testKey", "testValue"
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
+	key, value := "testKey", "testValue"
 
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
-
-	if err := writePrepend(m.Port(), key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
+	if err := writePrepend(key, []byte(value)); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("failed to prepend. err: %v", err)
 		return
 	}
@@ -675,21 +634,16 @@ func TestPrependFail(t *testing.T) {
 }
 
 func TestDeleteSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -714,17 +668,12 @@ func TestDeleteSuccess(t *testing.T) {
 }
 
 func TestDeleteFail(t *testing.T) {
-	key := "testKey"
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
+	key := "testKey"
 
 	if err := mc.Delete(key); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("err: %v", err)
@@ -733,6 +682,11 @@ func TestDeleteFail(t *testing.T) {
 }
 
 func TestIncrSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "10"
 	const incrValue uint64 = 10
 	const incrementedValue = 20
@@ -741,16 +695,6 @@ func TestIncrSuccess(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -787,6 +731,11 @@ func TestIncrSuccess(t *testing.T) {
 }
 
 func TestIncrFailNonNumericValue(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "nonNumericValue"
 	const incrValue uint64 = 10
 
@@ -794,16 +743,6 @@ func TestIncrFailNonNumericValue(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -817,18 +756,13 @@ func TestIncrFailNonNumericValue(t *testing.T) {
 }
 
 func TestIncrFailNotFound(t *testing.T) {
-	key := "testKey"
-	const incrValue uint64 = 10
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
+	key := "testKey"
+	const incrValue uint64 = 10
 
 	if _, err := mc.Increment(key, incrValue); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("err: %v", err)
@@ -837,6 +771,11 @@ func TestIncrFailNotFound(t *testing.T) {
 }
 
 func TestIncrMaxValueOverflowBecomesZero(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "1"
 	const incrValue = math.MaxUint64
 	const incrementedValue = 0
@@ -845,16 +784,6 @@ func TestIncrMaxValueOverflowBecomesZero(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -874,6 +803,11 @@ func TestIncrMaxValueOverflowBecomesZero(t *testing.T) {
 }
 
 func TestDecrSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "30"
 	const decrValue uint64 = 10
 	const decrementedValue = 20
@@ -882,16 +816,6 @@ func TestDecrSuccess(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -928,6 +852,11 @@ func TestDecrSuccess(t *testing.T) {
 }
 
 func TestDecrFailNonNumericValue(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "nonNumericValue"
 	const decrValue uint64 = 10
 
@@ -935,16 +864,6 @@ func TestDecrFailNonNumericValue(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -958,18 +877,13 @@ func TestDecrFailNonNumericValue(t *testing.T) {
 }
 
 func TestDecrFailNotFound(t *testing.T) {
-	key := "testKey"
-	const decrValue uint64 = 10
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
+	key := "testKey"
+	const decrValue uint64 = 10
 
 	if _, err := mc.Decrement(key, decrValue); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("err: %v", err)
@@ -978,6 +892,11 @@ func TestDecrFailNotFound(t *testing.T) {
 }
 
 func TestDecrLowestValueIsZero(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "30"
 	const decrValue uint64 = 100
 
@@ -985,16 +904,6 @@ func TestDecrLowestValueIsZero(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -1013,6 +922,10 @@ func TestDecrLowestValueIsZero(t *testing.T) {
 }
 
 func TestTouchSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
 	key, value := "testKey", "testValue"
 	expiration := 60
 	item := &memcache.Item{
@@ -1020,18 +933,6 @@ func TestTouchSuccess(t *testing.T) {
 		Value:      []byte(value),
 		Expiration: int32(expiration),
 	}
-
-	clk := clock.NewMock()
-
-	m, err := Run(cfg, WithClock(clk))
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -1059,18 +960,13 @@ func TestTouchSuccess(t *testing.T) {
 }
 
 func TestTouchFailNotFound(t *testing.T) {
-	key := "testKey"
-	const expTime int32 = 2
-
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
+	key := "testKey"
+	const expTime int32 = 2
 
 	if err := mc.Touch(key, expTime); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
 		t.Errorf("err: %v", err)
@@ -1079,21 +975,16 @@ func TestTouchFailNotFound(t *testing.T) {
 }
 
 func TestFlushAll(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -1118,22 +1009,17 @@ func TestFlushAll(t *testing.T) {
 }
 
 func TestCASSuccess(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -1168,6 +1054,11 @@ func TestCASSuccess(t *testing.T) {
 }
 
 func TestCASFailInvalidCASToken(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	newValue := "newValue"
 
@@ -1175,16 +1066,6 @@ func TestCASFailInvalidCASToken(t *testing.T) {
 		Key:   key,
 		Value: []byte(value),
 	}
-
-	m, err := Run(cfg)
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
@@ -1228,6 +1109,11 @@ func TestCASFailInvalidCASToken(t *testing.T) {
 }
 
 func TestCASFailNotFound(t *testing.T) {
+	if err := removeAllPreviousData(t); err != nil {
+		t.Errorf("err: %v", err)
+		return
+	}
+
 	key, value := "testKey", "testValue"
 	const expTime int32 = 2
 
@@ -1237,24 +1123,12 @@ func TestCASFailNotFound(t *testing.T) {
 		Expiration: expTime,
 	}
 
-	clk := clock.NewMock()
-
-	m, err := Run(cfg, WithClock(clk))
-	if err != nil {
-		t.Errorf("err: %v", err)
-		return
-	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
-
 	if err := mc.Set(item); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
 
-	item, err = mc.Get(key)
+	item, err := mc.Get(key)
 	if err != nil {
 		t.Errorf("err: %v", err)
 		return
@@ -1275,15 +1149,10 @@ func TestCASFailNotFound(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	m, err := Run(cfg)
-	if err != nil {
+	if err := removeAllPreviousData(t); err != nil {
 		t.Errorf("err: %v", err)
 		return
 	}
-
-	defer m.Close()
-
-	mc := memcache.New(fmt.Sprintf(":%d", m.Port()))
 
 	if err := mc.Ping(); err != nil {
 		t.Errorf("err: %v", err)
