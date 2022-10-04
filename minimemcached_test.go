@@ -16,13 +16,13 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var cfg = &Config{
-	Port: 0,
-}
-var port uint16
-var clk = clock.NewMock()
-var mc *memcache.Client
-var mm *MiniMemcached
+var (
+	cfg  = &Config{Port: 0}
+	port uint16
+	clk  = clock.NewMock()
+	mc   *memcache.Client
+	mm   *MiniMemcached
+)
 
 func TestMain(m *testing.M) {
 	var err error
