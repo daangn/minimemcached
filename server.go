@@ -12,7 +12,7 @@ type server struct {
 
 // newServer starts and returns a server listening on a given port.
 func newServer(port uint16) (*server, error) {
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		log.Printf("failed to listen on port: %d", port)
 		return nil, err
