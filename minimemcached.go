@@ -115,14 +115,19 @@ func (m *MiniMemcached) start(port uint16) error {
 }
 
 func (m *MiniMemcached) newServer() {
+	// Capture the listener synchronously, before spawning the goroutine. newServer runs during
+	// Run(), so this read happens-before any Close() (which can only be called after Run() returns).
+	// Passing the listener into serve() keeps the goroutine from ever reading the m.l field, which
+	// Close() concurrently sets to nil - reading it there would race and could nil-dereference Accept().
+	l := m.l
 	go func() {
-		m.serve()
+		m.serve(l)
 	}()
 }
 
-func (m *MiniMemcached) serve() {
+func (m *MiniMemcached) serve(l net.Listener) {
 	for {
-		conn, err := m.l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			return
 		}
