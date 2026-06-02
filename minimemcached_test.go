@@ -1159,3 +1159,16 @@ func TestVersion(t *testing.T) {
 		return
 	}
 }
+
+// TestRunClose exercises the startup of the accept goroutine against Close().
+// Closing right after Run() must not race the serve goroutine's read of the listener
+// nor nil-dereference Accept(). Run with -race to detect regressions.
+func TestRunClose(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		m, err := Run(&Config{Port: 0})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		m.Close()
+	}
+}
